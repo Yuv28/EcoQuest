@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Check } from 'lucide-react'
 import { register } from '../services/authService'
+import { useAuth } from '../hooks/useAuth'
 
 const INTEREST_OPTIONS = [
   'birds', 'butterflies', 'tide pools', 'hiking',
@@ -12,8 +13,10 @@ const INTEREST_OPTIONS = [
 export default function Onboarding() {
   const [step, setStep]           = useState('welcome')
   const [username, setUsername]   = useState('')
+  const [password, setPassword]   = useState('')
   const [interests, setInterests] = useState([])
   const [error, setError]         = useState(null)
+  const { login, loading } = useAuth()
   const navigate = useNavigate()
 
   const toggleInterest = (i) =>
@@ -50,6 +53,21 @@ export default function Onboarding() {
     }
   }
 
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    if (!username.trim()) { setError('Enter your username'); return }
+    if (!password.trim()) { setError('Enter your password'); return }
+    setError(null)
+    setStep('loading')
+    try {
+      await login(username, password)
+      navigate('/')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed — check your credentials')
+      setStep('login')
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6"
          style={{ background: 'radial-gradient(ellipse at top, #1e3a1e 0%, #0d1a0d 60%)' }}>
@@ -82,12 +100,60 @@ export default function Onboarding() {
             >
               Get Started <ArrowRight size={16} />
             </button>
+
+            <button
+              onClick={() => { setUsername(''); setPassword(''); setError(null); setStep('login') }}
+              className="text-xs text-forest-400 font-body mt-3 w-full text-center hover:text-forest-300"
+            >
+              Already have an account? Log in
+            </button>
+
             {error && <p className="text-red-400 text-xs font-body mt-3">{error}</p>}
 
             {/* DEV SKIP — remove before final presentation */}
             <button onClick={devSkip} className="text-xs text-forest-700 mt-4 underline w-full text-center">
               Skip (dev mode)
             </button>
+          </motion.div>
+        )}
+
+        {step === 'login' && (
+          <motion.div key="login"
+            initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}
+            className="w-full max-w-sm"
+          >
+            <h2 className="font-display text-2xl text-forest-300 mb-6">Welcome back</h2>
+            <form onSubmit={handleLogin} className="flex flex-col gap-4">
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                className="bg-forest-800 border border-forest-700 rounded-xl px-4 py-3 text-forest-300 font-body outline-none focus:border-forest-500 w-full"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="bg-forest-800 border border-forest-700 rounded-xl px-4 py-3 text-forest-300 font-body outline-none focus:border-forest-500 w-full"
+              />
+              {error && <p className="text-red-400 text-xs font-body">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full"
+              >
+                {loading ? 'Logging in...' : 'Log In'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setUsername(''); setPassword(''); setError(null); setStep('welcome') }}
+                className="text-xs text-forest-500 font-body text-center hover:text-forest-300"
+              >
+                ← Back to signup
+              </button>
+            </form>
           </motion.div>
         )}
 
