@@ -1,39 +1,134 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Users, Search, UserPlus, Check, MapPin, Zap, X, RefreshCw, Loader } from 'lucide-react'
+import { Users, Search, UserPlus, Check, MapPin, Zap, X, RefreshCw } from 'lucide-react'
 import { findMatches, getSuggestedMatches, generateGroupQuest } from '../services/matchService'
 import { saveQuest } from '../services/questStorage'
 
-const AVATARS = ['🧑', '👩', '🧔', '👱', '🧕', '👨', '🧒', '👧']
+const AVATARS = ['👩', '🧑', '🧔', '👱', '🧕', '👨', '🧒', '👧']
 
-// ── Mock matches — fallback when backend isn't ready ──────────────────────────
 const MOCK_MATCHES = [
-  { user_id: 'mock_001', username: 'Jordan', xp: 980,  score: 0.95, cluster: 1, answers: { nature_interest: 'Birds',       quest_style: 'Small group',   activity_level: 'Often'     } },
-  { user_id: 'mock_002', username: 'Priya',  xp: 1560, score: 0.91, cluster: 1, answers: { nature_interest: 'Insects',     quest_style: 'Small group',   activity_level: 'Every day' } },
+  { user_id: 'mock_001', username: 'Priya',  xp: 980,  score: 0.95, cluster: 1, answers: { nature_interest: 'Birds',       quest_style: 'Small group',   activity_level: 'Often'     } },
+  { user_id: 'mock_002', username: 'Jordan', xp: 1560, score: 0.91, cluster: 1, answers: { nature_interest: 'Insects',     quest_style: 'Small group',   activity_level: 'Every day' } },
   { user_id: 'mock_003', username: 'Marcus', xp: 720,  score: 0.87, cluster: 2, answers: { nature_interest: 'Marine life', quest_style: 'Flexible',      activity_level: 'Sometimes' } },
   { user_id: 'mock_004', username: 'Elena',  xp: 1200, score: 0.83, cluster: 1, answers: { nature_interest: 'Birds',       quest_style: 'Small group',   activity_level: 'Often'     } },
   { user_id: 'mock_005', username: 'Felix',  xp: 430,  score: 0.78, cluster: 3, answers: { nature_interest: 'Plants',      quest_style: 'Solo explorer', activity_level: 'Rarely'    } },
 ]
 
-// ── Mock quest — fallback when backend isn't ready ────────────────────────────
-const MOCK_QUEST = {
-  questId:         'quest_mock_001',
-  species_target:  'Monarch Butterfly',
-  scientific_name: 'Danaus plexippus',
-  location:        'Balboa Park, San Diego',
-  description:     'Head to the milkweed patches near the Natural History Museum in Balboa Park. Monarch butterflies are currently migrating through San Diego — keep your eyes on the flowering plants!',
-  challenges: [
-    { id: 'c1', label: 'Get there eco-friendly (walk, bike, or bus)', xp: 50 },
-    { id: 'c2', label: 'Find the Monarch and observe for 2 minutes',  xp: 75 },
-    { id: 'c3', label: 'Place a small orange slice near the butterfly', xp: 50 },
-    { id: 'c4', label: 'Take a photo and submit to iNaturalist',       xp: 25 },
-  ],
-  xp: 200,
+const MOCK_FRIENDS = [
+  { user_id: 'friend_001', username: 'Aisha', xp: 2100, answers: { nature_interest: 'Birds',       quest_style: 'Small group', activity_level: 'Every day' } },
+  { user_id: 'friend_002', username: 'Diego', xp: 870,  answers: { nature_interest: 'Marine life', quest_style: 'Flexible',    activity_level: 'Often'     } },
+  { user_id: 'friend_003', username: 'Yuki',  xp: 1340, answers: { nature_interest: 'Plants',      quest_style: 'Small group', activity_level: 'Sometimes' } },
+]
+
+const MOCK_QUESTS = [
+  {
+    questId:         'quest_mock_001',
+    species_target:  'Monarch Butterfly',
+    scientific_name: 'Danaus plexippus',
+    location:        'Balboa Park, San Diego',
+    description:     'Head to the milkweed patches near the Natural History Museum in Balboa Park. Monarch butterflies are currently migrating through San Diego — keep your eyes on the flowering plants!',
+    challenges: [
+      { id: 'c1', label: 'Get there eco-friendly (walk, bike, or bus)',  xp: 50 },
+      { id: 'c2', label: 'Find the Monarch and observe for 2 minutes',   xp: 75 },
+      { id: 'c3', label: 'Place a small orange slice near the butterfly', xp: 50 },
+      { id: 'c4', label: 'Take a photo and submit to iNaturalist',        xp: 25 },
+    ],
+    xp: 200, emoji: '🦋',
+  },
+  {
+    questId:         'quest_mock_002',
+    species_target:  'Great Blue Heron',
+    scientific_name: 'Ardea herodias',
+    location:        'San Elijo Lagoon, Encinitas',
+    description:     "San Elijo Lagoon is one of the best spots in San Diego to observe Great Blue Herons hunting along the water's edge. Arrive early morning for the best sighting chances.",
+    challenges: [
+      { id: 'c1', label: 'Get there eco-friendly (walk, bike, or bus)',         xp: 50 },
+      { id: 'c2', label: 'Spot the heron standing still in the water',           xp: 75 },
+      { id: 'c3', label: 'Observe it hunting for 3 minutes without disturbing',  xp: 60 },
+      { id: 'c4', label: 'Take a photo and submit to iNaturalist',               xp: 25 },
+    ],
+    xp: 210, emoji: '🦤',
+  },
+  {
+    questId:         'quest_mock_003',
+    species_target:  'Bufflehead Duck',
+    scientific_name: 'Bucephala albeola',
+    location:        'Mission Bay, San Diego',
+    description:     'Mission Bay is a winter hotspot for Bufflehead ducks. Look for their distinctive black-and-white iridescent heads bobbing on the water near the eastern shore.',
+    challenges: [
+      { id: 'c1', label: 'Get there eco-friendly (walk, bike, or bus)',   xp: 50 },
+      { id: 'c2', label: 'Spot a Bufflehead and identify it by its head', xp: 75 },
+      { id: 'c3', label: 'Toss a small piece of bread near the water',    xp: 50 },
+      { id: 'c4', label: 'Take a photo and submit to iNaturalist',        xp: 25 },
+    ],
+    xp: 200, emoji: '🦆',
+  },
+  {
+    questId:         'quest_mock_004',
+    species_target:  'Ochre Sea Star',
+    scientific_name: 'Pisaster ochraceus',
+    location:        'La Jolla Cove Tide Pools',
+    description:     'Head to the tide pools at La Jolla Cove during low tide to search for Ochre Sea Stars. These iconic orange and purple stars are making a comeback after sea star wasting disease.',
+    challenges: [
+      { id: 'c1', label: 'Get there eco-friendly (walk, bike, or bus)',        xp: 50 },
+      { id: 'c2', label: 'Find a sea star in the tide pools',                   xp: 80 },
+      { id: 'c3', label: 'Observe without touching — note its colour pattern',  xp: 45 },
+      { id: 'c4', label: 'Take a photo and submit to iNaturalist',              xp: 25 },
+    ],
+    xp: 200, emoji: '⭐',
+  },
+  {
+    questId:         'quest_mock_005',
+    species_target:  'Western Burrowing Owl',
+    scientific_name: 'Athene cunicularia hypugaea',
+    location:        'Otay Mesa Grasslands, San Diego',
+    description:     'The Western Burrowing Owl is critically endangered in San Diego. Head to the open grasslands of Otay Mesa at dusk and look for small owls perched at ground level near their burrows.',
+    challenges: [
+      { id: 'c1', label: 'Get there eco-friendly (walk, bike, or bus)',    xp: 50 },
+      { id: 'c2', label: 'Spot a burrowing owl at its burrow entrance',    xp: 90 },
+      { id: 'c3', label: 'Log the time of day and behaviour you observed', xp: 40 },
+      { id: 'c4', label: 'Take a photo and submit to iNaturalist',         xp: 25 },
+    ],
+    xp: 205, emoji: '🦉',
+  },
+  {
+    questId:         'quest_mock_006',
+    species_target:  'Brown Pelican',
+    scientific_name: 'Pelecanus occidentalis',
+    location:        'Ocean Beach Pier, San Diego',
+    description:     'Brown Pelicans are a conservation success story — once nearly extinct from DDT, they now thrive along the San Diego coast. Head to Ocean Beach Pier to watch them dive for fish.',
+    challenges: [
+      { id: 'c1', label: 'Get there eco-friendly (walk, bike, or bus)',      xp: 50 },
+      { id: 'c2', label: 'Watch a pelican make a plunge dive for fish',      xp: 75 },
+      { id: 'c3', label: 'Count how many pelicans are roosting on the pier', xp: 50 },
+      { id: 'c4', label: 'Take a photo and submit to iNaturalist',           xp: 25 },
+    ],
+    xp: 200, emoji: '🐦',
+  },
+]
+
+const getRandomQuest = () => {
+  const quest = MOCK_QUESTS[Math.floor(Math.random() * MOCK_QUESTS.length)]
+  return { ...quest, questId: `${quest.questId}_${Date.now()}` }
+}
+
+const getFriends = () => {
+  const stored = localStorage.getItem('ecoquest_friends')
+  return stored ? JSON.parse(stored) : MOCK_FRIENDS
+}
+
+const addFriend = (user) => {
+  const existing = getFriends()
+  const already  = existing.some(f => f.user_id === user.user_id)
+  if (already) return false
+  localStorage.setItem('ecoquest_friends', JSON.stringify([...existing, user]))
+  return true
 }
 
 export default function Matchmaking() {
   const [matches,       setMatches]       = useState([])
+  const [friends,       setFriends]       = useState([])
   const [invited,       setInvited]       = useState([])
   const [tab,           setTab]           = useState('suggested')
   const [search,        setSearch]        = useState('')
@@ -41,14 +136,15 @@ export default function Matchmaking() {
   const [loadingQuest,  setLoadingQuest]  = useState(false)
   const [quest,         setQuest]         = useState(null)
   const [alreadyExists, setAlreadyExists] = useState(false)
+  const [addedFriends,  setAddedFriends]  = useState({})
   const [error,         setError]         = useState(null)
   const navigate = useNavigate()
 
   const user = JSON.parse(localStorage.getItem('ecoquest_user') || '{}')
 
-  // ── Load ML-recommended matches on mount / tab change ────────────────────
   useEffect(() => {
     if (tab === 'suggested') fetchMatches()
+    if (tab === 'friends')   loadFriends()
   }, [tab])
 
   const fetchMatches = async () => {
@@ -58,22 +154,17 @@ export default function Matchmaking() {
     setAlreadyExists(false)
     setError(null)
     try {
-      // ✅ Try ML-powered endpoint first (findMatches uses /match/recommend)
-      const res = await findMatches(user.id)
+      const res         = await findMatches(user.id)
       const recommended = res.data?.recommendedUsers || res.data?.matches || []
-
-      // Normalise field names — ML model may return userId or user_id
-      const normalised = recommended.map(m => ({
+      setMatches(recommended.map(m => ({
         user_id:  m.userId  || m.user_id,
         username: m.username,
         xp:       m.xp      || 0,
         score:    m.score   || 0,
         cluster:  m.cluster || null,
         answers:  m.answers || {},
-      }))
-      setMatches(normalised)
-    } catch (err) {
-      // Fallback: try suggest endpoint, then mock
+      })))
+    } catch {
       try {
         const res = await getSuggestedMatches(user.id)
         setMatches(res.data.matches)
@@ -86,6 +177,15 @@ export default function Matchmaking() {
     }
   }
 
+  const loadFriends = () => {
+    setLoadingMatch(true)
+    setInvited([])
+    setTimeout(() => {
+      setFriends(getFriends())
+      setLoadingMatch(false)
+    }, 400)
+  }
+
   const toggleInvite = (userId) => {
     setInvited(prev =>
       prev.includes(userId)
@@ -94,7 +194,12 @@ export default function Matchmaking() {
     )
   }
 
-  // ── Start group quest: call ML model to get species recommendation ─────────
+  const handleAddFriend = (e, match) => {
+    e.stopPropagation()
+    const wasAdded = addFriend(match)
+    if (wasAdded) setAddedFriends(prev => ({ ...prev, [match.user_id]: true }))
+  }
+
   const handleStartQuest = async () => {
     if (invited.length === 0) return
     setLoadingQuest(true)
@@ -110,20 +215,23 @@ export default function Matchmaking() {
       console.warn('Location unavailable — using default San Diego coords')
     }
 
-    const groupUserIds = [user.id, ...invited]
-
     try {
-      const res = await generateGroupQuest(groupUserIds, location)
+      const res = await generateGroupQuest([user.id, ...invited], location)
       setQuest(res.data)
     } catch {
       await new Promise(r => setTimeout(r, 1200))
-      setQuest(MOCK_QUEST)
+      setQuest(getRandomQuest())
     } finally {
       setLoadingQuest(false)
     }
   }
 
-  // ── Save quest to localStorage and navigate ───────────────────────────────
+  // ── Separate function — NOT inside handleLetsGo ───────────────────────────
+  const refreshQuest = () => {
+    setQuest(getRandomQuest())
+    setAlreadyExists(false)
+  }
+
   const handleLetsGo = () => {
     const wasAdded = saveQuest({
       ...quest,
@@ -132,14 +240,21 @@ export default function Matchmaking() {
       group:     [user.id, ...invited],
     })
     setAlreadyExists(!wasAdded)
+
+    const allUsers = tab === 'suggested' ? matches : friends
+    invited.forEach(uid => {
+      const partner = allUsers.find(m => m.user_id === uid)
+      if (partner) addFriend(partner)
+    })
+
     navigate('/quests')
   }
 
   const getAvatar = (userId) =>
     AVATARS[parseInt(userId.replace(/\D/g, '').slice(-1)) % AVATARS.length] || '🧑'
 
-  // Filter by search
-  const filtered = matches.filter(m =>
+  const currentList = tab === 'suggested' ? matches : friends
+  const filtered    = currentList.filter(m =>
     m.username?.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -155,12 +270,22 @@ export default function Matchmaking() {
             <p className="text-xs text-forest-500 font-body">Your group quest is ready!</p>
             <h1 className="font-display text-2xl font-bold text-forest-300">🎯 Quest Assigned</h1>
           </div>
-          <button
-            onClick={() => { setQuest(null); setInvited([]) }}
-            className="w-8 h-8 rounded-full bg-forest-800 border border-forest-700 flex items-center justify-center"
-          >
-            <X size={14} className="text-forest-500" />
-          </button>
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={refreshQuest}
+              className="w-8 h-8 rounded-full bg-forest-800 border border-forest-700 flex items-center justify-center"
+              title="Try a different quest"
+            >
+              <RefreshCw size={14} className="text-forest-500" />
+            </motion.button>
+            <button
+              onClick={() => { setQuest(null); setInvited([]) }}
+              className="w-8 h-8 rounded-full bg-forest-800 border border-forest-700 flex items-center justify-center"
+            >
+              <X size={14} className="text-forest-500" />
+            </button>
+          </div>
         </div>
 
         <AnimatePresence>
@@ -183,7 +308,7 @@ export default function Matchmaking() {
         >
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-forest-700 flex items-center justify-center text-4xl flex-shrink-0">
-              🦋
+              {quest.emoji || '🌿'}
             </div>
             <div className="flex-1">
               <h2 className="font-display text-xl font-bold text-forest-300">{quest.species_target}</h2>
@@ -224,10 +349,11 @@ export default function Matchmaking() {
 
         {/* Group members */}
         <h3 className="font-display text-sm text-forest-400 mb-3">Your Group</h3>
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-2">
           {[user.id, ...invited].map((uid) => {
-            const matchedUser = matches.find(m => m.user_id === uid)
-            const label = uid === user.id ? (user.username || 'You') : (matchedUser?.username || 'Partner')
+            const allUsers    = tab === 'suggested' ? matches : friends
+            const matchedUser = allUsers.find(m => m.user_id === uid)
+            const label       = uid === user.id ? (user.username || 'You') : (matchedUser?.username || 'Partner')
             return (
               <div key={uid} className="flex flex-col items-center gap-1">
                 <div className="w-10 h-10 rounded-full bg-forest-700 border-2 border-forest-500 flex items-center justify-center text-lg">
@@ -238,6 +364,10 @@ export default function Matchmaking() {
             )
           })}
         </div>
+
+        <p className="text-xs text-forest-600 font-body mb-6">
+          🤝 Your quest partners will be added to your friends list automatically
+        </p>
 
         <motion.button whileTap={{ scale: 0.97 }} onClick={handleLetsGo}
           className="btn-primary w-full flex items-center justify-center gap-2">
@@ -254,7 +384,8 @@ export default function Matchmaking() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
         className="flex items-center justify-between mb-1">
         <h1 className="font-display text-2xl font-bold text-forest-300">Find Partners</h1>
-        <motion.button whileTap={{ scale: 0.85 }} onClick={fetchMatches}
+        <motion.button whileTap={{ scale: 0.85 }}
+          onClick={tab === 'suggested' ? fetchMatches : loadFriends}
           disabled={loadingMatch}
           className="w-8 h-8 rounded-full bg-forest-800 border border-forest-700 flex items-center justify-center">
           <motion.div animate={loadingMatch ? { rotate: 360 } : {}}
@@ -264,17 +395,17 @@ export default function Matchmaking() {
         </motion.button>
       </motion.div>
       <p className="text-xs text-forest-500 font-body mb-5">
-        ML-matched by your quiz answers and interests
+        Paired with fellow eco explorers like you
       </p>
 
       {/* Tab toggle */}
       <div className="flex bg-forest-800 rounded-xl p-1 mb-4 border border-forest-700">
         {['suggested', 'friends'].map(t => (
-          <button key={t} onClick={() => setTab(t)}
+          <button key={t} onClick={() => { setTab(t); setSearch('') }}
             className={`flex-1 py-2 rounded-lg text-xs font-body font-semibold capitalize transition-all ${
               tab === t ? 'bg-forest-600 text-forest-300' : 'text-forest-500'
             }`}>
-            {t}
+            {t === 'friends' ? `Friends (${getFriends().length})` : 'Suggested'}
           </button>
         ))}
       </div>
@@ -283,14 +414,14 @@ export default function Matchmaking() {
       <div className="relative mb-4">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-forest-500" />
         <input
-          placeholder="Search by name..."
+          placeholder={tab === 'suggested' ? 'Search suggestions...' : 'Search friends...'}
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full bg-forest-800 border border-forest-700 rounded-xl pl-9 pr-4 py-3 text-sm text-forest-300 font-body outline-none focus:border-forest-500 placeholder:text-forest-600"
         />
       </div>
 
-      {/* Loading */}
+      {/* Loading skeletons */}
       {loadingMatch && (
         <div className="flex flex-col gap-3">
           {[1, 2, 3].map(i => (
@@ -312,16 +443,19 @@ export default function Matchmaking() {
         </div>
       )}
 
-      {/* Empty */}
+      {/* Empty state */}
       {!loadingMatch && !error && filtered.length === 0 && (
         <div className="text-center py-12">
           <p className="text-sm text-forest-500 font-body">
-            No matches found. Complete your profile to get suggestions!
+            {tab === 'friends'
+              ? 'No friends yet — complete a quest with suggested partners to add them!'
+              : 'No matches found. Complete your profile to get suggestions!'
+            }
           </p>
         </div>
       )}
 
-      {/* Match cards */}
+      {/* Cards */}
       {!loadingMatch && !error && filtered.length > 0 && (
         <div className="flex flex-col gap-3">
           {filtered.map((match, i) => (
@@ -345,13 +479,12 @@ export default function Matchmaking() {
                     {match.username}
                   </span>
                   <span className="xp-badge">{match.xp} XP</span>
-                  {/* ML score badge — shown when available from model */}
-                  {match.score > 0 && (
+                  {tab === 'suggested' && match.score > 0 && (
                     <span className="text-xs bg-forest-700 text-forest-400 px-2 py-0.5 rounded-full font-body">
                       {Math.round(match.score * 100)}% match
                     </span>
                   )}
-                  {match.cluster !== null && (
+                  {tab === 'suggested' && match.cluster !== null && (
                     <span className="text-xs bg-forest-700 text-forest-400 px-2 py-0.5 rounded-full font-body">
                       Cluster {match.cluster}
                     </span>
@@ -370,18 +503,34 @@ export default function Matchmaking() {
                 </div>
               </div>
 
-              <motion.div whileTap={{ scale: 0.85 }}
-                className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-                  invited.includes(match.user_id)
-                    ? 'bg-forest-500 border border-forest-400'
-                    : 'bg-forest-800 border border-forest-700'
-                }`}
-              >
-                {invited.includes(match.user_id)
-                  ? <Check size={15} className="text-forest-300" />
-                  : <UserPlus size={15} className="text-forest-500" />
-                }
-              </motion.div>
+              <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                <motion.div whileTap={{ scale: 0.85 }}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                    invited.includes(match.user_id)
+                      ? 'bg-forest-500 border border-forest-400'
+                      : 'bg-forest-800 border border-forest-700'
+                  }`}
+                >
+                  {invited.includes(match.user_id)
+                    ? <Check size={15} className="text-forest-300" />
+                    : <UserPlus size={15} className="text-forest-500" />
+                  }
+                </motion.div>
+
+                {tab === 'suggested' && (
+                  <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={(e) => handleAddFriend(e, match)}
+                    className={`text-xs font-body px-2 py-0.5 rounded-full border transition-colors ${
+                      addedFriends[match.user_id]
+                        ? 'text-forest-400 border-forest-600 bg-forest-700'
+                        : 'text-forest-500 border-forest-700 hover:border-forest-500'
+                    }`}
+                  >
+                    {addedFriends[match.user_id] ? '✅ Added' : '+ Friend'}
+                  </motion.button>
+                )}
+              </div>
             </motion.div>
           ))}
         </div>
