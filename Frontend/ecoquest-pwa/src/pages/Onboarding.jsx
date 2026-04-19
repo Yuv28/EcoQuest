@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 
 export default function Onboarding() {
   const [mode, setMode]       = useState('welcome') // welcome | login | signup
-  const [email, setEmail]     = useState('')
+  const [username, setUsername] = useState('') // Changed from email to username for login
   const [password, setPassword] = useState('')
   const [name, setName]       = useState('')
   const { login, signup, loading, error } = useAuth()
@@ -23,13 +23,13 @@ export default function Onboarding() {
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    await login(email, password)
+    await login(username, password) // Changed from email to username
     navigate('/')
   }
 
   const handleSignup = async (e) => {
     e.preventDefault()
-    await signup({ name, email, password })
+    await signup({ username: name, interests: [] }) // Backend expects username and interests
     navigate('/')
   }
 
@@ -86,8 +86,8 @@ export default function Onboarding() {
             <h2 className="font-display text-2xl text-forest-300 mb-6">Welcome back</h2>
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <input
-                type="email" placeholder="Email" value={email}
-                onChange={e => setEmail(e.target.value)}
+                type="text" placeholder="Username" value={username}
+                onChange={e => setUsername(e.target.value)}
                 className="bg-forest-800 border border-forest-700 rounded-xl px-4 py-3 text-forest-300 font-body outline-none focus:border-forest-500 w-full"
               />
               <input

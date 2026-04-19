@@ -9,11 +9,11 @@ export function useAuth() {
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (username, password) => {
     setLoading(true); setError(null)
     try {
       // TODO: replace with real AWS Cognito call
-      const res = await api.post('/auth/login', { email, password })
+      const res = await api.post('/auth/login', { username, password })
       localStorage.setItem('ecoquest_token', res.data.token)
       localStorage.setItem('ecoquest_user',  JSON.stringify(res.data.user))
       setUser(res.data.user)
@@ -27,10 +27,10 @@ export function useAuth() {
   const signup = useCallback(async (payload) => {
     setLoading(true); setError(null)
     try {
-      const res = await api.post('/auth/signup', payload)
-      localStorage.setItem('ecoquest_token', res.data.token)
-      localStorage.setItem('ecoquest_user',  JSON.stringify(res.data.user))
-      setUser(res.data.user)
+      const res = await api.post('/register', payload)
+      localStorage.setItem('ecoquest_token', res.data.token || 'mock_token') // Backend doesn't return token yet
+      localStorage.setItem('ecoquest_user',  JSON.stringify({ id: res.data.userId, name: payload.name || payload.username, ...payload }))
+      setUser({ id: res.data.userId, name: payload.name || payload.username, ...payload })
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed')
     } finally {
