@@ -271,6 +271,38 @@ def lambda_handler(event, context):
                     "msg": f"No {species_target} detected. Try again!"
                 })
 
+        # --- GET USER QUESTS ---
+        elif "/quests/user/" in path and event.get('httpMethod') == 'GET':
+            # Extract user_id from path: /quests/user/{userId}
+            path_parts = path.split('/')
+            if len(path_parts) >= 4:
+                user_id = path_parts[3]
+            else:
+                return respond(400, {"error": "userId required in path"})
+
+            # Query quests for this user
+            response = quests_table.query(
+                IndexName='UserQuestsIndex',  # Assuming GSI exists
+                KeyConditionExpression=boto3.dynamodb.conditions.Key('SK').eq(f"USER#{user_id}")
+            )
+            
+            quests = response.get('Items', [])
+            
+            # Format quests for frontend
+            formatted_quests = []
+            for quest in quests:
+                formatted_quests.append({
+                    'id': quest['PK'].replace('QUEST#', ''),
+                    'species': quest['species_target'],
+                    'status': quest.get('status', 'active'),
+                    'location': quest.get('location', {}),
+                    'xp': quest.get('reward_points', 0),
+                    'created_at': quest.get('created_at'),
+                    'completed_at': quest.get('completed_at')
+                })
+            
+            return respond(200, {"quests": formatted_quests})
+
         # --- ADD REWARD POINTS ---
         elif "/rewards/add" in path:
             user_id = body.get('userId')
@@ -293,6 +325,93 @@ def lambda_handler(event, context):
                 'created_at': datetime.utcnow().isoformat()
             })
             return respond(201, {"pointsAwarded": final_points, "multiplier": multiplier})
+        
+        # --- MATCH: RECOMMEND COMPATIBLE USERS ---
+        elif "/match/recommend" in path:
+            import pickle, boto3, numpy as np
+            from itertools import combinations
+
+            user_id = body.get('userId')
+            group_size = body.get('groupSize', 4)
+
+            if not user_id:
+                return respond(400, {"error": "userId is required"})
+
+            # 1. Load the requesting user's answers from DynamoDB
+            requester = users_table.get_item(Key={'PK': f"USER#{user_id}"}).get('Item')
+            if not requester:
+                return respond(404, {"error": "User not found"})
+
+            new_user_answers = requester.get('answers', {})
+            if not new_user_answers:
+                return respond(400, {"error": "User has no survey answers"})
+
+            # 2. Load model.pkl from S3
+            model_obj = s3_client.get_object(Bucket=BUCKET_NAME, Key='ml/model.pkl')
+            model = pickle.loads(model_obj['Body'].read())
+
+            kmeans   = model['kmeans']
+            encoder  = model['encoder']   # not used directly — we encode manually
+            scaler   = model['scaler']
+            QUESTIONS = model['questions']
+            FEATURE_WEIGHTS = model['weights']
+
+            KEYS = [q['key'] for q in QUESTIONS]
+            weight_vec = np.array([FEATURE_WEIGHTS[k] for k in KEYS])
+
+            # 3. Encode helper functions (mirror of notebook)
+            def encode_user(answers):
+                row = []
+                for q in QUESTIONS:
+                    val = answers.get(q['key'], q['options'][0])
+                    idx = q['options'].index(val) if val in q['options'] else 0
+                    row.append(float(idx))
+                return np.array(row)
+
+            def compute_similarity(a, b):
+                a, b = a * weight_vec, b * weight_vec
+                denom = np.linalg.norm(a) * np.linalg.norm(b)
+                return float(np.dot(a, b) / denom) if denom > 0 else 0.0
+
+            # 4. Encode the requesting user
+            new_vec = encode_user(new_user_answers)
+            new_vec_scaled = scaler.transform([new_vec])
+            new_cluster = int(kmeans.predict(new_vec_scaled)[0])
+
+            # 5. Scan all other users from DynamoDB
+            scan_result = users_table.scan(
+                FilterExpression=boto3.dynamodb.conditions.Attr('username').exists()
+            )
+            all_users = [u for u in scan_result.get('Items', [])
+                        if u['PK'] != f"USER#{user_id}" and u.get('answers')]
+
+            # 6. Score each user against the requester
+            scored = []
+            for u in all_users:
+                vec = encode_user(u['answers'])
+                score = compute_similarity(new_vec, vec)
+                uid = u['PK'].replace('USER#', '')
+                scored.append({
+                    'userId': uid,
+                    'username': u.get('username'),
+                    'score': round(score, 4),
+                    'cluster': int(kmeans.predict(scaler.transform([vec]))[0]),
+                    'answers': u.get('answers', {})
+                })
+
+            # 7. Sort by score and return top matches
+            scored.sort(key=lambda x: x['score'], reverse=True)
+            top_matches = scored[:10]  # return top 10 for the UI
+
+            # Strip answers before returning (frontend doesn't need raw answers)
+            for m in top_matches:
+                del m['answers']
+
+            return respond(200, {
+                "userId": user_id,
+                "assignedCluster": new_cluster,
+                "recommendedUsers": top_matches
+            })
 
         else:
             return respond(404, {"error": f"Route not found: {path}"})
