@@ -22,9 +22,9 @@ async function openCamera(onFile) {
   } else {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      const video      = document.createElement('video')
-      video.srcObject  = stream
-      video.autoplay   = true
+      const video     = document.createElement('video')
+      video.srcObject = stream
+      video.autoplay  = true
       video.onloadedmetadata = () => {
         video.play()
         setTimeout(() => {
@@ -52,10 +52,241 @@ async function openCamera(onFile) {
   }
 }
 
+// ── Screen 1: Camera / placeholder ───────────────────────────────────────────
+function CameraScreen({ onCapture, loading }) {
+  return (
+    <div className="relative w-full h-screen bg-black flex flex-col">
+      <div className="flex-1 flex items-center justify-center bg-forest-950">
+        <div className="flex flex-col items-center gap-4 text-forest-700">
+          <CameraIcon size={64} strokeWidth={1} />
+          <p className="font-body text-sm text-center px-8">
+            Tap the button below to open your camera and identify a species
+          </p>
+        </div>
+      </div>
+
+      {/* Loading overlay */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3"
+          >
+            <motion.div animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+              <Zap size={36} style={{ color: 'var(--accent-amber)' }} />
+            </motion.div>
+            <p className="font-body text-sm text-forest-300">Identifying species...</p>
+            <p className="font-body text-xs text-forest-500">This may take a moment</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Capture button */}
+      {!loading && (
+        <div
+          className="absolute bottom-10 left-0 right-0 flex flex-col items-center gap-3"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={onCapture}
+            className="w-16 h-16 rounded-full border-4 border-white/80 bg-white/20 backdrop-blur-sm flex items-center justify-center"
+          >
+            <CameraIcon size={24} className="text-white" />
+          </motion.button>
+          <p className="text-xs text-white/50 font-body">Tap to open camera</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Screen 2: Result — image + facts, stays until user dismisses ─────────────
+function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex flex-col bg-forest-950"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
+      {/* Photo — top half */}
+      <div className="relative flex-shrink-0" style={{ height: '40vh' }}>
+        <img
+          src={preview}
+          className="w-full h-full object-cover"
+          alt="captured species"
+        />
+        {/* Gradient fade into card below */}
+        <div className="absolute bottom-0 left-0 right-0 h-16"
+             style={{ background: 'linear-gradient(to bottom, transparent, #0d1a0d)' }} />
+
+        {/* Close button */}
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          onClick={onReset}
+          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center"
+        >
+          <X size={16} className="text-white" />
+        </motion.button>
+
+        {/* Confidence badge over photo */}
+        <div className="absolute bottom-5 left-4 right-4 flex items-center gap-2">
+          <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${result.confidence}%` }}
+              transition={{ delay: 0.3, duration: 1 }}
+              className="h-full rounded-full bg-forest-400"
+            />
+          </div>
+          <span className="text-xs font-mono text-white/70">
+            {result.confidence}% match
+          </span>
+        </div>
+      </div>
+
+      {/* Facts — scrollable bottom half */}
+      <div className="flex-1 overflow-y-auto bg-forest-950">
+        <div className="px-5 pt-4 pb-6">
+
+          {/* Species name + XP */}
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-forest-300">
+                {result.common_name}
+              </h2>
+              <p className="text-xs text-forest-500 italic font-body mt-0.5">
+                {result.scientific_name}
+              </p>
+            </div>
+            <span className="xp-badge mt-1">+200 XP</span>
+          </div>
+
+          {/* Facts section */}
+          {loadingInfo ? (
+            <div className="flex items-center gap-3 py-6">
+              <motion.div animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                className="text-xl">🌿
+              </motion.div>
+              <p className="text-sm text-forest-500 font-body">
+                Loading species facts from iNaturalist...
+              </p>
+            </div>
+          ) : speciesInfo ? (
+            <div className="flex flex-col gap-5">
+
+              {speciesInfo.description && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex gap-3"
+                >
+                  <BookOpen size={16} className="text-forest-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">About</p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">
+                      {speciesInfo.description}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {speciesInfo.where_found && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex gap-3"
+                >
+                  <MapPin size={16} className="text-forest-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">Where Found</p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">
+                      {speciesInfo.where_found}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {speciesInfo.diet && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex gap-3"
+                >
+                  <Utensils size={16} className="text-forest-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">Diet</p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">
+                      {speciesInfo.diet}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {speciesInfo.habitat && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex gap-3"
+                >
+                  <span className="text-base flex-shrink-0 mt-0.5">🌿</span>
+                  <div>
+                    <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">Habitat</p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">
+                      {speciesInfo.habitat}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {speciesInfo.fun_fact && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex gap-3"
+                >
+                  <Star size={16} className="flex-shrink-0 mt-0.5"
+                    style={{ color: 'var(--accent-amber)' }} />
+                  <div>
+                    <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">Fun Fact</p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">
+                      {speciesInfo.fun_fact}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+            </div>
+          ) : null}
+
+          {/* Action buttons */}
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={onReset}
+              className="btn-ghost flex-1 flex items-center justify-center gap-2"
+            >
+              <RotateCcw size={14} /> Try Again
+            </button>
+            <button className="btn-primary flex-1">
+              Submit to iNaturalist
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Main Camera component ─────────────────────────────────────────────────────
 export default function Camera() {
   const [preview,     setPreview]     = useState(null)
-  const [result,      setResult]      = useState(null)   // identification result
-  const [speciesInfo, setSpeciesInfo] = useState(null)   // iNaturalist facts
+  const [result,      setResult]      = useState(null)
+  const [speciesInfo, setSpeciesInfo] = useState(null)
   const [loading,     setLoading]     = useState(false)
   const [loadingInfo, setLoadingInfo] = useState(false)
   const [error,       setError]       = useState(null)
@@ -82,10 +313,10 @@ export default function Camera() {
       try {
         const base64 = await fileToBase64(file)
 
-        // ── Step 1: Identify the species ──────────────────────────────────
+        // ── Step 1: Identify species ──────────────────────────────────────
         let identified
         try {
-          const res = await fetch(`${API_BASE}/species/identify`, {
+          const res  = await fetch(`${API_BASE}/species/identify`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({ image: base64 }),
@@ -105,7 +336,7 @@ export default function Camera() {
         setResult(identified)
         setLoading(false)
 
-        // ── Step 2: Fetch iNaturalist facts using taxon_id ────────────────
+        // ── Step 2: Fetch iNaturalist facts ───────────────────────────────
         if (identified.taxon_id) {
           setLoadingInfo(true)
           try {
@@ -116,11 +347,10 @@ export default function Camera() {
             // Backend not ready — use mock facts
             setSpeciesInfo({
               description: 'A large, striking butterfly known for its orange and black wings with white spots along the edges.',
-              habitat:     'Open fields, meadows, roadsides, and gardens with milkweed plants',
+              habitat:     'Open fields, meadows, roadsides, and gardens with milkweed plants.',
               diet:        'Adults drink nectar from flowers. Caterpillars eat exclusively milkweed leaves.',
-              where_found: 'North America, migrating annually to central Mexico and coastal California for winter',
-              fun_fact:    'Monarchs navigate using a time-compensated sun compass and can travel up to 100 miles per day during migration.',
-              wikipedia_url: 'https://en.wikipedia.org/wiki/Monarch_butterfly',
+              where_found: 'North America, migrating annually to central Mexico and coastal California for winter.',
+              fun_fact:    'Monarchs can travel up to 100 miles per day during migration and live up to 8 months.',
             })
           } finally {
             setLoadingInfo(false)
@@ -142,218 +372,30 @@ export default function Camera() {
   }
 
   return (
-    <div className="relative w-full h-screen bg-black flex flex-col">
+    <div className="relative w-full h-screen">
 
-      {/* Preview or placeholder */}
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-forest-950">
-        {preview ? (
-          <img src={preview} className="w-full h-full object-cover" alt="captured" />
-        ) : (
-          <div className="flex flex-col items-center gap-4 text-forest-700">
-            <CameraIcon size={64} strokeWidth={1} />
-            <p className="font-body text-sm text-center px-8">
-              Tap the button below to open your camera and identify a species
-            </p>
-          </div>
-        )}
+      {/* Always render camera screen underneath */}
+      <CameraScreen onCapture={handleCapture} loading={loading} />
 
-        {/* Loading overlay */}
-        <AnimatePresence>
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3"
-            >
-              <motion.div animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
-                <Zap size={32} style={{ color: 'var(--accent-amber)' }} />
-              </motion.div>
-              <p className="font-body text-sm text-forest-300">Identifying species...</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* ── Result + Facts Sheet — stays on screen until user closes it ── */}
-      <AnimatePresence>
-        {result && (
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute bottom-0 left-0 right-0 bg-forest-900 border-t border-forest-700 rounded-t-3xl"
-            style={{
-              maxHeight: '80vh',
-              paddingBottom: 'env(safe-area-inset-bottom, 24px)',
-            }}
-          >
-            {/* Scrollable content */}
-            <div className="overflow-y-auto" style={{ maxHeight: '80vh' }}>
-              <div className="p-6">
-
-                {/* Close + XP header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h2 className="font-display text-xl font-bold text-forest-300">
-                      {result.common_name}
-                    </h2>
-                    <p className="text-xs text-forest-500 italic font-body">
-                      {result.scientific_name}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="xp-badge">+200 XP</span>
-                    <motion.button
-                      whileTap={{ scale: 0.85 }}
-                      onClick={reset}
-                      className="w-7 h-7 rounded-full bg-forest-800 border border-forest-700 flex items-center justify-center"
-                    >
-                      <X size={14} className="text-forest-400" />
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Confidence bar */}
-                <div className="flex items-center gap-2 mb-5">
-                  <div className="flex-1 h-1.5 bg-forest-800 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${result.confidence}%` }}
-                      transition={{ delay: 0.2, duration: 0.8 }}
-                      className="h-full rounded-full bg-forest-500"
-                    />
-                  </div>
-                  <span className="text-xs font-mono text-forest-400">
-                    {result.confidence}% match
-                  </span>
-                </div>
-
-                {/* iNaturalist facts */}
-                {loadingInfo ? (
-                  <div className="flex items-center gap-2 py-4">
-                    <motion.div animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                      className="text-lg">🌿
-                    </motion.div>
-                    <p className="text-xs text-forest-500 font-body">
-                      Loading species info...
-                    </p>
-                  </div>
-                ) : speciesInfo && (
-                  <div className="flex flex-col gap-4">
-
-                    {/* Description */}
-                    {speciesInfo.description && (
-                      <div className="flex gap-3">
-                        <BookOpen size={15} className="text-forest-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-xs font-mono text-forest-500 mb-1">About</p>
-                          <p className="text-sm font-body text-forest-300 leading-relaxed">
-                            {speciesInfo.description}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Where found */}
-                    {speciesInfo.where_found && (
-                      <div className="flex gap-3">
-                        <MapPin size={15} className="text-forest-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-xs font-mono text-forest-500 mb-1">Where Found</p>
-                          <p className="text-sm font-body text-forest-300 leading-relaxed">
-                            {speciesInfo.where_found}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Diet */}
-                    {speciesInfo.diet && (
-                      <div className="flex gap-3">
-                        <Utensils size={15} className="text-forest-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-xs font-mono text-forest-500 mb-1">Diet</p>
-                          <p className="text-sm font-body text-forest-300 leading-relaxed">
-                            {speciesInfo.diet}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Habitat */}
-                    {speciesInfo.habitat && (
-                      <div className="flex gap-3">
-                        <span className="text-sm flex-shrink-0 mt-0.5">🌿</span>
-                        <div>
-                          <p className="text-xs font-mono text-forest-500 mb-1">Habitat</p>
-                          <p className="text-sm font-body text-forest-300 leading-relaxed">
-                            {speciesInfo.habitat}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Fun fact */}
-                    {speciesInfo.fun_fact && (
-                      <div className="flex gap-3">
-                        <Star size={15} className="text-forest-500 flex-shrink-0 mt-0.5"
-                          style={{ color: 'var(--accent-amber)' }} />
-                        <div>
-                          <p className="text-xs font-mono text-forest-500 mb-1">Fun Fact</p>
-                          <p className="text-sm font-body text-forest-300 leading-relaxed">
-                            {speciesInfo.fun_fact}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                  </div>
-                )}
-
-                {/* Action buttons */}
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={reset}
-                    className="btn-ghost flex-1 flex items-center justify-center gap-2"
-                  >
-                    <RotateCcw size={14} /> Try Again
-                  </button>
-                  <button className="btn-primary flex-1">
-                    Submit to iNaturalist
-                  </button>
-                </div>
-
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Capture button — only when no result showing */}
-      {!result && !loading && (
-        <div
-          className="absolute bottom-10 left-0 right-0 flex flex-col items-center gap-3"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        >
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={handleCapture}
-            className="w-16 h-16 rounded-full border-4 border-white/80 bg-white/20 backdrop-blur-sm flex items-center justify-center"
-          >
-            <CameraIcon size={24} className="text-white" />
-          </motion.button>
-          <p className="text-xs text-white/50 font-body">Tap to open camera</p>
-        </div>
-      )}
-
-      {/* Error */}
+      {/* Error toast */}
       {error && (
-        <div className="absolute top-16 left-4 right-4 bg-red-900/80 border border-red-700 rounded-xl px-4 py-3 text-xs text-red-300 font-body text-center">
+        <div className="absolute top-16 left-4 right-4 z-40 bg-red-900/80 border border-red-700 rounded-xl px-4 py-3 text-xs text-red-300 font-body text-center">
           {error}
         </div>
       )}
+
+      {/* Result screen slides in on top and stays until dismissed */}
+      <AnimatePresence>
+        {result && preview && (
+          <ResultScreen
+            preview={preview}
+            result={result}
+            speciesInfo={speciesInfo}
+            loadingInfo={loadingInfo}
+            onReset={reset}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   )
