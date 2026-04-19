@@ -1,72 +1,72 @@
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import BottomNav from './components/BottomNav'
-import Home        from './pages/Home'
-import Matchmaking from './pages/Matchmaking'
-import MyQuests    from './pages/MyQuests'
-import QuestDetail from './pages/QuestDetail'
-import Camera      from './pages/Camera'
+import BottomNav     from './components/BottomNav'
+import Home          from './pages/Home'
+import Matchmaking   from './pages/Matchmaking'
+import MyQuests      from './pages/MyQuests'
+import QuestDetail   from './pages/QuestDetail'
+import Camera        from './pages/Camera'
 import RayBanTracker from './pages/RayBanTracker'
-import Profile     from './pages/Profile'
-import Onboarding  from './pages/Onboarding'
+import Profile       from './pages/Profile'
+import Onboarding    from './pages/Onboarding'
 
-// Simple auth check — swap with real Cognito check later
-const isAuthenticated = () => !!localStorage.getItem('ecoquest_token')
+const isLoggedIn = () => !!localStorage.getItem('ecoquest_token')
 
-function ProtectedRoute({ children }) {
-  return isAuthenticated() ? children : <Navigate to="/onboarding" replace />
+function ProtectedRoute({ children, onLogin }) {
+  if (!isLoggedIn()) return <Navigate to="/onboarding" replace />
+  return children
+}
+
+function PublicRoute({ children }) {
+  return isLoggedIn() ? <Navigate to="/" replace /> : children
 }
 
 export default function App() {
+  // loggedIn as state so BottomNav re-renders when token is set
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn())
+
+  // Pass this down to Onboarding so it can trigger a re-render
+  const handleAuthChange = () => setLoggedIn(isLoggedIn())
+
   return (
     <BrowserRouter>
       <div className="relative w-full h-full grain">
         <Routes>
-          {/* Public */}
-          <Route path="/onboarding" element={<Onboarding />} />
 
-          {/* Protected — all main app screens */}
+          <Route path="/onboarding" element={
+            <PublicRoute>
+              <Onboarding onAuthChange={handleAuthChange} />
+            </PublicRoute>
+          } />
+
           <Route path="/" element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
+            <ProtectedRoute><Home /></ProtectedRoute>
           } />
           <Route path="/matchmaking" element={
-            <ProtectedRoute>
-              <Matchmaking />
-            </ProtectedRoute>
+            <ProtectedRoute><Matchmaking /></ProtectedRoute>
           } />
           <Route path="/quests" element={
-            <ProtectedRoute>
-              <MyQuests />
-            </ProtectedRoute>
+            <ProtectedRoute><MyQuests /></ProtectedRoute>
           } />
           <Route path="/quests/:questId" element={
-            <ProtectedRoute>
-              <QuestDetail />
-            </ProtectedRoute>
+            <ProtectedRoute><QuestDetail /></ProtectedRoute>
           } />
           <Route path="/camera" element={
-            <ProtectedRoute>
-              <Camera />
-            </ProtectedRoute>
+            <ProtectedRoute><Camera /></ProtectedRoute>
           } />
           <Route path="/tracker" element={
-            <ProtectedRoute>
-              <RayBanTracker />
-            </ProtectedRoute>
+            <ProtectedRoute><RayBanTracker /></ProtectedRoute>
           } />
           <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
+            <ProtectedRoute><Profile /></ProtectedRoute>
           } />
 
-          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
 
-        {/* Bottom nav shows on all protected screens */}
-        {isAuthenticated() && <BottomNav />}
+        {/* Now uses state instead of a direct localStorage check */}
+        {loggedIn && <BottomNav />}
       </div>
     </BrowserRouter>
   )

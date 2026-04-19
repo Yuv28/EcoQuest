@@ -1,79 +1,133 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Camera as CameraIcon, X, Zap, RotateCcw } from 'lucide-react'
-import { useCamera } from '../hooks/useCamera'
+import { Camera as CameraIcon, RotateCcw, Zap } from 'lucide-react'
 import { identifySpecies } from '../services/speciesService'
 
-export default function Camera() {
-  const { videoRef, capturing, startCamera, capturePhoto, stopCamera } = useCamera()
-  const [result,   setResult]   = useState(null)  // species ID result
-  const [loading,  setLoading]  = useState(false)
-  const [preview,  setPreview]  = useState(null)  // base64 preview image
-  const [error,    setError]    = useState(null)
+async function openCamera(onFile) {
+  const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  const isAndroid = /Android/.test(navigator.userAgent)
+  const isMobile  = isIOS || isAndroid
 
-  useEffect(() => {
-    startCamera().catch(e => setError('Camera access denied. Please allow camera permissions.'))
-    return () => stopCamera()
-  }, [])
-
-  const handleCapture = async () => {
-    const base64 = capturePhoto()
-    if (!base64) return
-    setPreview(`data:image/jpeg;base64,${base64}`)
-    stopCamera()
-    setLoading(true)
-    try {
-      // TODO: wire to real Rekognition Lambda endpoint
-      // const res = await identifySpecies(base64)
-      // setResult(res.data)
-
-      // MOCK result for demo
-      await new Promise(r => setTimeout(r, 1500))
-      setResult({
-        common_name:     'Monarch Butterfly',
-        scientific_name: 'Danaus plexippus',
-        confidence:      94,
-        safety:          'safe',
-        xp_earned:       200,
-        fun_fact:        'Monarchs migrate up to 3,000 miles each year to reach their wintering grounds.',
-      })
-    } catch (e) {
-      setError('Identification failed. Try again.')
-    } finally {
-      setLoading(false)
+  if (isMobile) {
+    // Mobile: use native camera via file input
+    const input  = document.createElement('input')
+    input.type   = 'file'
+    input.accept = isIOS ? 'image/*' : 'image/*,android/allowCamera'
+    if (isIOS) input.capture = 'environment'
+    input.onchange = (e) => {
+      const file = e.target.files[0]
+      if (file) onFile(file)
     }
+    input.click()
+  } else {
+    // Desktop: use webcam via getUserMedia
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      })
+
+      const video      = document.createElement('video')
+      video.srcObject  = stream
+      video.autoplay   = true
+
+      video.onloadedmetadata = () => {
+        video.play()
+        setTimeout(() => {
+          const canvas  = document.createElement('canvas')
+          canvas.width  = video.videoWidth
+          canvas.height = video.videoHeight
+          canvas.getContext('2d').drawImage(video, 0, 0)
+
+          // Stop the webcam stream
+          stream.getTracks().forEach(t => t.stop())
+
+          // Convert to file and pass it along
+          canvas.toBlob(blob => {
+            const file = new File([blob], 'webcam.jpg', { type: 'image/jpeg' })
+            onFile(file)
+          }, 'image/jpeg', 0.85)
+        }, 500)
+      }
+    } catch (err) {
+      // Webcam not available — fall back to file picker
+      const input    = document.createElement('input')
+      input.type     = 'file'
+      input.accept   = 'image/*'
+      input.onchange = (e) => {
+        const file = e.target.files[0]
+        if (file) onFile(file)
+      }
+      input.click()
+    }
+  }
+}
+
+export default function Camera() {
+  const [preview, setPreview] = useState(null)
+  const [result,  setResult]  = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState(null)
+
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader   = new FileReader()
+    reader.onload  = () => resolve(reader.result.split(',')[1])
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
+  const handleCapture = () => {
+    openCamera(async (file) => {
+      // Show preview immediately
+      const reader  = new FileReader()
+      reader.onload = (e) => setPreview(e.target.result)
+      reader.readAsDataURL(file)
+
+      setLoading(true)
+      setError(null)
+      try {
+        const base64 = await fileToBase64(file)
+
+        // TODO: swap mock for real call when Lambda is ready
+        // const res = await identifySpecies(base64)
+        // setResult(res.data)
+
+        // MOCK result for demo
+        await new Promise(r => setTimeout(r, 1500))
+        setResult({
+          common_name:     'Monarch Butterfly',
+          scientific_name: 'Danaus plexippus',
+          confidence:      94,
+          safety:          'safe',
+          xp_earned:       200,
+          fun_fact:        'Monarchs migrate up to 3,000 miles each year to reach their wintering grounds.',
+        })
+      } catch (e) {
+        setError('Identification failed. Try again.')
+      } finally {
+        setLoading(false)
+      }
+    })
   }
 
   const reset = () => {
     setResult(null)
     setPreview(null)
     setError(null)
-    startCamera()
   }
 
   return (
     <div className="relative w-full h-screen bg-black flex flex-col">
 
-      {/* Camera viewfinder or preview */}
-      <div className="flex-1 relative overflow-hidden">
-        {preview
-          ? <img src={preview} className="w-full h-full object-cover" alt="captured" />
-          : <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-        }
-
-        {/* Targeting reticle */}
-        {!preview && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-56 h-56 border-2 border-forest-400/60 rounded-2xl relative">
-              {['tl','tr','bl','br'].map(c => (
-                <div key={c} className={`absolute w-5 h-5 border-forest-400
-                  ${c==='tl' ? 'top-0 left-0  border-t-2 border-l-2 rounded-tl-lg' : ''}
-                  ${c==='tr' ? 'top-0 right-0 border-t-2 border-r-2 rounded-tr-lg' : ''}
-                  ${c==='bl' ? 'bottom-0 left-0  border-b-2 border-l-2 rounded-bl-lg' : ''}
-                  ${c==='br' ? 'bottom-0 right-0 border-b-2 border-r-2 rounded-br-lg' : ''}
-                `} />
-              ))}
-            </div>
+      {/* Preview or placeholder */}
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-forest-950">
+        {preview ? (
+          <img src={preview} className="w-full h-full object-cover" alt="captured" />
+        ) : (
+          <div className="flex flex-col items-center gap-4 text-forest-700">
+            <CameraIcon size={64} strokeWidth={1} />
+            <p className="font-body text-sm text-center px-8">
+              Tap the button below to open your camera and identify a species
+            </p>
           </div>
         )}
 
@@ -117,6 +171,7 @@ export default function Camera() {
               <span className="xp-badge">+{result.xp_earned} XP</span>
             </div>
 
+            {/* Confidence bar */}
             <div className="flex items-center gap-2 mb-3">
               <div className="flex-1 h-1.5 bg-forest-800 rounded-full overflow-hidden">
                 <motion.div
@@ -129,7 +184,9 @@ export default function Camera() {
               <span className="text-xs font-mono text-forest-400">{result.confidence}% match</span>
             </div>
 
-            <p className="text-xs text-forest-500 font-body leading-relaxed mb-4">💡 {result.fun_fact}</p>
+            <p className="text-xs text-forest-500 font-body leading-relaxed mb-4">
+              💡 {result.fun_fact}
+            </p>
 
             <div className="flex gap-3">
               <button onClick={reset} className="btn-ghost flex-1 flex items-center justify-center gap-2">
@@ -141,10 +198,12 @@ export default function Camera() {
         )}
       </AnimatePresence>
 
-      {/* Capture button — only when camera is live */}
+      {/* Capture button */}
       {!result && !loading && (
-        <div className="absolute bottom-10 left-0 right-0 flex justify-center"
-             style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div
+          className="absolute bottom-10 left-0 right-0 flex flex-col items-center gap-3"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleCapture}
@@ -152,14 +211,17 @@ export default function Camera() {
           >
             <CameraIcon size={24} className="text-white" />
           </motion.button>
+          <p className="text-xs text-white/50 font-body">Tap to open camera</p>
         </div>
       )}
 
+      {/* Error */}
       {error && (
         <div className="absolute top-16 left-4 right-4 bg-red-900/80 border border-red-700 rounded-xl px-4 py-3 text-xs text-red-300 font-body text-center">
           {error}
         </div>
       )}
+
     </div>
   )
 }
