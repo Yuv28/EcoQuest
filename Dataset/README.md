@@ -11,3 +11,4 @@
 | `EcoQuest_Stores` | Caches nearby eco-friendly pet stores from Google Places API - reduces API calls by storing store name, address, and coordinates by geohash |
 | `EcoQuest_Species` | Master list of all 9 target species - habitats, active months, temperature ranges, San Diego hotspots, approach distances, iNaturalist IDs, and fun facts |
 | `EcoQuest_Groups` | Tracks friend groups on quests together - group members, active quest, and group status |
+| `mostAbundant` | Image data of the 100 most abundant species in San Diego to use for CV model |
