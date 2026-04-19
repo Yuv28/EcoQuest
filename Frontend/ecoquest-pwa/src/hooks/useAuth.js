@@ -1,0 +1,49 @@
+import { useState, useCallback } from 'react'
+import api from '../services/api'
+
+export function useAuth() {
+  const [user, setUser]       = useState(() => {
+    const stored = localStorage.getItem('ecoquest_user')
+    return stored ? JSON.parse(stored) : null
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState(null)
+
+  const login = useCallback(async (email, password) => {
+    setLoading(true); setError(null)
+    try {
+      // TODO: replace with real AWS Cognito call
+      const res = await api.post('/auth/login', { email, password })
+      localStorage.setItem('ecoquest_token', res.data.token)
+      localStorage.setItem('ecoquest_user',  JSON.stringify(res.data.user))
+      setUser(res.data.user)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const signup = useCallback(async (payload) => {
+    setLoading(true); setError(null)
+    try {
+      const res = await api.post('/auth/signup', payload)
+      localStorage.setItem('ecoquest_token', res.data.token)
+      localStorage.setItem('ecoquest_user',  JSON.stringify(res.data.user))
+      setUser(res.data.user)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Signup failed')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('ecoquest_token')
+    localStorage.removeItem('ecoquest_user')
+    setUser(null)
+    window.location.href = '/onboarding'
+  }, [])
+
+  return { user, loading, error, login, signup, logout }
+}
