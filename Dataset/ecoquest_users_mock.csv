@@ -1,0 +1,101 @@
+user_id,name,age,neighborhood,activity_level,preferred_time,nature_interest,transport_mode,quest_style,travel_distance,experience_level,motivation
+user_001,Aisha,46,Chula Vista,Often,Flexible,Birds,Walk,Big group,1-5 miles,Experienced,Conservation
+user_002,Brandon,28,La Jolla,Every day,Morning,Plants,Car,Flexible,5-10 miles,Some experience,Learning
+user_003,Camila,19,Santee,Every day,Afternoon,Insects,Bike,Flexible,10+ miles,Beginner,Learning
+user_004,Diego,29,Balboa Park,Sometimes,Morning,Plants,Walk,Solo explorer,5-10 miles,Experienced,Conservation
+user_005,Elena,45,North Park,Every day,Evening,Insects,Bike,Big group,1-5 miles,Experienced,Social
+user_006,Felix,20,Ocean Beach,Often,Evening,Birds,Walk,Big group,1-5 miles,Expert,Learning
+user_007,Grace,31,Balboa Park,Sometimes,Morning,Insects,Walk,Small group,10+ miles,Expert,Conservation
+user_008,Hiro,24,North Park,Rarely,Flexible,Marine life,Public transit,Small group,<1 mile,Expert,Adventure
+user_009,Isabelle,21,Balboa Park,Sometimes,Afternoon,Insects,Bike,Flexible,1-5 miles,Beginner,Conservation
+user_010,Jordan,35,Balboa Park,Every day,Afternoon,Insects,Bike,Flexible,1-5 miles,Experienced,Social
+user_011,Kenji,32,Santee,Sometimes,Evening,Plants,Walk,Small group,10+ miles,Beginner,Social
+user_012,Luna,35,Chula Vista,Rarely,Flexible,Insects,Walk,Flexible,10+ miles,Expert,Learning
+user_013,Marcus,46,Chula Vista,Rarely,Morning,Birds,Public transit,Solo explorer,10+ miles,Beginner,Social
+user_014,Nadia,25,Santee,Often,Evening,Marine life,Walk,Flexible,5-10 miles,Experienced,Learning
+user_015,Oscar,22,Balboa Park,Often,Afternoon,Birds,Car,Big group,<1 mile,Expert,Social
+user_016,Priya,51,Mission Bay,Every day,Evening,Marine life,Bike,Flexible,<1 mile,Experienced,Social
+user_017,Quinn,39,La Jolla,Often,Morning,Marine life,Walk,Big group,1-5 miles,Experienced,Learning
+user_018,Rafael,22,Balboa Park,Often,Evening,Insects,Public transit,Big group,<1 mile,Experienced,Conservation
+user_019,Sofia,43,Balboa Park,Every day,Morning,Marine life,Public transit,Flexible,5-10 miles,Beginner,Social
+user_020,Tariq,49,North Park,Sometimes,Morning,Marine life,Public transit,Solo explorer,5-10 miles,Experienced,Learning
+user_021,Uma,53,Ocean Beach,Every day,Evening,Marine life,Public transit,Small group,10+ miles,Some experience,Adventure
+user_022,Victor,23,North Park,Every day,Flexible,Plants,Car,Small group,1-5 miles,Experienced,Social
+user_023,Wendy,45,Mission Bay,Often,Afternoon,Birds,Walk,Solo explorer,5-10 miles,Some experience,Learning
+user_024,Xavier,30,Mission Bay,Often,Evening,Insects,Car,Big group,<1 mile,Some experience,Learning
+user_025,Yara,50,La Jolla,Sometimes,Flexible,Plants,Public transit,Big group,1-5 miles,Expert,Social
+user_026,Zane,41,Mission Bay,Every day,Morning,Insects,Walk,Small group,10+ miles,Expert,Adventure
+user_027,Aaliya,19,La Jolla,Rarely,Morning,Birds,Car,Solo explorer,5-10 miles,Beginner,Adventure
+user_028,Ben,19,North Park,Sometimes,Evening,Birds,Car,Solo explorer,<1 mile,Experienced,Adventure
+user_029,Chloe,19,Ocean Beach,Every day,Afternoon,Plants,Bike,Flexible,5-10 miles,Expert,Conservation
+user_030,Darius,28,Santee,Often,Morning,Marine life,Bike,Flexible,<1 mile,Expert,Adventure
+user_031,Eva,23,Hillcrest,Often,Evening,Plants,Car,Solo explorer,<1 mile,Expert,Conservation
+user_032,Finn,23,Santee,Rarely,Evening,Plants,Car,Big group,10+ miles,Experienced,Adventure
+user_033,Giselle,20,Chula Vista,Often,Flexible,Plants,Public transit,Flexible,<1 mile,Beginner,Social
+user_034,Hassan,35,Santee,Rarely,Evening,Plants,Walk,Solo explorer,1-5 miles,Experienced,Conservation
+user_035,Iris,47,Balboa Park,Often,Evening,Plants,Car,Small group,10+ miles,Beginner,Social
+user_036,Jake,19,Mission Bay,Every day,Afternoon,Plants,Walk,Solo explorer,10+ miles,Experienced,Conservation
+user_037,Kira,26,Mission Bay,Often,Evening,Plants,Car,Big group,10+ miles,Expert,Adventure
+user_038,Leo,50,Santee,Every day,Evening,Birds,Car,Flexible,1-5 miles,Expert,Social
+user_039,Maya,52,Santee,Sometimes,Morning,Marine life,Walk,Solo explorer,1-5 miles,Expert,Adventure
+user_040,Noah,35,Balboa Park,Sometimes,Evening,Plants,Walk,Solo explorer,10+ miles,Beginner,Social
+user_041,Olivia,50,Hillcrest,Rarely,Flexible,Plants,Car,Flexible,10+ miles,Experienced,Conservation
+user_042,Pedro,34,Santee,Rarely,Flexible,Plants,Public transit,Big group,1-5 miles,Experienced,Adventure
+user_043,Rosa,47,Hillcrest,Sometimes,Morning,Marine life,Bike,Flexible,5-10 miles,Experienced,Adventure
+user_044,Sam,38,Hillcrest,Rarely,Flexible,Marine life,Car,Solo explorer,<1 mile,Expert,Learning
+user_045,Tina,36,North Park,Often,Flexible,Birds,Car,Solo explorer,10+ miles,Expert,Adventure
+user_046,Usman,46,Hillcrest,Rarely,Afternoon,Marine life,Car,Solo explorer,<1 mile,Expert,Learning
+user_047,Valeria,48,La Jolla,Every day,Morning,Plants,Public transit,Solo explorer,<1 mile,Expert,Conservation
+user_048,Will,50,Santee,Often,Flexible,Insects,Walk,Small group,5-10 miles,Some experience,Adventure
+user_049,Xena,20,Santee,Sometimes,Flexible,Insects,Car,Big group,1-5 miles,Experienced,Adventure
+user_050,Yasmin,44,Balboa Park,Sometimes,Afternoon,Birds,Car,Solo explorer,<1 mile,Experienced,Adventure
+user_051,Zach,46,Balboa Park,Often,Afternoon,Marine life,Bike,Solo explorer,10+ miles,Beginner,Social
+user_052,Amara,24,Mission Bay,Every day,Morning,Plants,Walk,Flexible,10+ miles,Some experience,Social
+user_053,Blake,31,North Park,Often,Evening,Marine life,Car,Small group,1-5 miles,Expert,Conservation
+user_054,Carmen,39,La Jolla,Rarely,Afternoon,Marine life,Bike,Solo explorer,1-5 miles,Some experience,Adventure
+user_055,Devon,39,Mission Bay,Every day,Afternoon,Insects,Public transit,Small group,5-10 miles,Expert,Learning
+user_056,Elise,50,Santee,Rarely,Flexible,Plants,Car,Solo explorer,5-10 miles,Expert,Adventure
+user_057,Femi,49,North Park,Sometimes,Evening,Marine life,Public transit,Flexible,10+ miles,Expert,Learning
+user_058,Gia,47,La Jolla,Rarely,Flexible,Marine life,Public transit,Flexible,1-5 miles,Experienced,Adventure
+user_059,Hugo,54,Balboa Park,Rarely,Afternoon,Marine life,Public transit,Solo explorer,10+ miles,Beginner,Learning
+user_060,Imani,18,Chula Vista,Sometimes,Flexible,Insects,Bike,Flexible,<1 mile,Expert,Learning
+user_061,Jasper,18,Santee,Rarely,Evening,Plants,Public transit,Solo explorer,1-5 miles,Beginner,Conservation
+user_062,Kaya,20,North Park,Sometimes,Flexible,Marine life,Walk,Small group,<1 mile,Beginner,Adventure
+user_063,Liam,45,Ocean Beach,Often,Morning,Insects,Bike,Small group,10+ miles,Beginner,Social
+user_064,Mia,33,Balboa Park,Sometimes,Flexible,Birds,Public transit,Flexible,<1 mile,Some experience,Adventure
+user_065,Nico,54,Chula Vista,Sometimes,Afternoon,Insects,Walk,Flexible,1-5 miles,Expert,Conservation
+user_066,Ora,27,Balboa Park,Often,Afternoon,Plants,Walk,Flexible,<1 mile,Beginner,Social
+user_067,Piper,33,Santee,Every day,Evening,Insects,Walk,Flexible,10+ miles,Expert,Conservation
+user_068,Remy,37,Santee,Every day,Afternoon,Marine life,Car,Solo explorer,<1 mile,Beginner,Conservation
+user_069,Stella,54,North Park,Often,Morning,Birds,Car,Small group,5-10 miles,Expert,Learning
+user_070,Theo,30,North Park,Often,Afternoon,Insects,Walk,Big group,1-5 miles,Experienced,Conservation
+user_071,Una,34,Balboa Park,Every day,Morning,Insects,Bike,Small group,1-5 miles,Some experience,Conservation
+user_072,Vera,24,North Park,Sometimes,Morning,Insects,Walk,Big group,<1 mile,Expert,Social
+user_073,Wren,42,Ocean Beach,Rarely,Morning,Plants,Bike,Solo explorer,<1 mile,Expert,Social
+user_074,Xander,52,Mission Bay,Often,Flexible,Plants,Bike,Solo explorer,5-10 miles,Expert,Social
+user_075,Yuki,40,Hillcrest,Every day,Morning,Plants,Walk,Big group,<1 mile,Experienced,Learning
+user_076,Zara,52,Mission Bay,Sometimes,Morning,Birds,Bike,Flexible,10+ miles,Beginner,Adventure
+user_077,Andre,30,La Jolla,Often,Morning,Plants,Car,Solo explorer,<1 mile,Experienced,Social
+user_078,Bianca,26,Chula Vista,Every day,Afternoon,Marine life,Car,Flexible,5-10 miles,Some experience,Conservation
+user_079,Cruz,33,Ocean Beach,Rarely,Evening,Plants,Walk,Flexible,5-10 miles,Beginner,Social
+user_080,Demi,40,Santee,Rarely,Evening,Birds,Walk,Small group,1-5 miles,Experienced,Adventure
+user_081,Erik,48,Balboa Park,Rarely,Evening,Marine life,Walk,Big group,5-10 miles,Some experience,Conservation
+user_082,Freya,29,Mission Bay,Sometimes,Afternoon,Plants,Walk,Solo explorer,1-5 miles,Experienced,Adventure
+user_083,Gage,30,Santee,Sometimes,Morning,Insects,Public transit,Small group,1-5 miles,Beginner,Learning
+user_084,Hana,54,Hillcrest,Often,Flexible,Plants,Walk,Solo explorer,1-5 miles,Expert,Learning
+user_085,Ivan,24,Mission Bay,Rarely,Flexible,Plants,Bike,Flexible,5-10 miles,Experienced,Learning
+user_086,Jade,44,Balboa Park,Sometimes,Evening,Marine life,Bike,Big group,<1 mile,Beginner,Adventure
+user_087,Knox,45,Hillcrest,Sometimes,Flexible,Plants,Car,Solo explorer,5-10 miles,Beginner,Conservation
+user_088,Lena,18,La Jolla,Rarely,Flexible,Insects,Walk,Big group,10+ miles,Beginner,Learning
+user_089,Milo,50,Hillcrest,Rarely,Afternoon,Insects,Car,Solo explorer,10+ miles,Beginner,Learning
+user_090,Nola,38,Santee,Sometimes,Morning,Marine life,Car,Solo explorer,10+ miles,Experienced,Conservation
+user_091,Otis,37,Mission Bay,Sometimes,Evening,Birds,Walk,Small group,5-10 miles,Experienced,Learning
+user_092,Pearl,20,Santee,Often,Morning,Marine life,Car,Small group,10+ miles,Expert,Social
+user_093,Reed,29,Santee,Every day,Morning,Plants,Bike,Flexible,10+ miles,Some experience,Social
+user_094,Sage,45,North Park,Rarely,Morning,Plants,Car,Big group,1-5 miles,Experienced,Learning
+user_095,Troy,26,Mission Bay,Rarely,Flexible,Birds,Car,Flexible,<1 mile,Beginner,Adventure
+user_096,Ursula,52,Ocean Beach,Sometimes,Afternoon,Marine life,Car,Solo explorer,5-10 miles,Beginner,Adventure
+user_097,Vince,27,Santee,Sometimes,Afternoon,Marine life,Walk,Solo explorer,5-10 miles,Expert,Learning
+user_098,Willa,18,Balboa Park,Every day,Evening,Birds,Public transit,Solo explorer,1-5 miles,Experienced,Learning
+user_099,Xiomara,39,La Jolla,Often,Morning,Birds,Walk,Small group,<1 mile,Experienced,Conservation
+user_100,York,18,Ocean Beach,Every day,Evening,Insects,Car,Solo explorer,<1 mile,Experienced,Learning
