@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: false,
+      },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
         name: 'EcoQuest',
@@ -34,11 +37,16 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.inaturalist\.org\/.*/i,
             handler: 'NetworkFirst',
-            options: { cacheName: 'inaturalist-cache', expiration: { maxEntries: 50, maxAgeSeconds: 3600 } }
+            options: {
+              cacheName: 'inaturalist-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 3600 }
+            }
           },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

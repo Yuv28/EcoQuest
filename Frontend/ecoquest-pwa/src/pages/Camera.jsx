@@ -52,8 +52,21 @@ async function openCamera(onFile) {
   }
 }
 
+// Opens photo library only — no camera — for Ray-Ban glasses photos
+function openGlassesPhoto(onFile) {
+  const input    = document.createElement('input')
+  input.type     = 'file'
+  input.accept   = 'image/*'
+  // No capture attribute — forces photo library, not camera
+  input.onchange = (e) => {
+    const file = e.target.files[0]
+    if (file) onFile(file)
+  }
+  input.click()
+}
+
 // ── Screen 1: Camera / placeholder ───────────────────────────────────────────
-function CameraScreen({ onCapture, loading }) {
+function CameraScreen({ onCapture, onGlassesPhoto, loading }) {
   return (
     <div className="relative w-full h-screen bg-black flex flex-col">
       <div className="flex-1 flex items-center justify-center bg-forest-950">
@@ -82,12 +95,13 @@ function CameraScreen({ onCapture, loading }) {
         )}
       </AnimatePresence>
 
-      {/* Capture button */}
+      {/* Capture buttons */}
       {!loading && (
         <div
-          className="absolute bottom-10 left-0 right-0 flex flex-col items-center gap-3"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        >
+  className="absolute left-0 right-0 flex flex-col items-center gap-3"
+  style={{ bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))', paddingBottom: '16px' }}
+>
+          {/* Phone camera button */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={onCapture}
@@ -96,13 +110,23 @@ function CameraScreen({ onCapture, loading }) {
             <CameraIcon size={24} className="text-white" />
           </motion.button>
           <p className="text-xs text-white/50 font-body">Tap to open camera</p>
+
+          {/* Ray-Ban glasses photo button */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={onGlassesPhoto}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm mt-1"
+          >
+            <span className="text-base">🕶️</span>
+            <span className="text-xs text-white/70 font-body">Use Ray-Ban Photo</span>
+          </motion.button>
         </div>
       )}
     </div>
   )
 }
 
-// ── Screen 2: Result — image + facts, stays until user dismisses ─────────────
+// ── Screen 2: Result — image + facts ─────────────────────────────────────────
 function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
   return (
     <motion.div
@@ -112,14 +136,13 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
       className="fixed inset-0 z-50 flex flex-col bg-forest-950"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      {/* Photo — top half */}
+      {/* Photo — top 40% */}
       <div className="relative flex-shrink-0" style={{ height: '40vh' }}>
         <img
           src={preview}
           className="w-full h-full object-cover"
           alt="captured species"
         />
-        {/* Gradient fade into card below */}
         <div className="absolute bottom-0 left-0 right-0 h-16"
              style={{ background: 'linear-gradient(to bottom, transparent, #0d1a0d)' }} />
 
@@ -132,7 +155,7 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
           <X size={16} className="text-white" />
         </motion.button>
 
-        {/* Confidence badge over photo */}
+        {/* Confidence bar over photo */}
         <div className="absolute bottom-5 left-4 right-4 flex items-center gap-2">
           <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
             <motion.div
@@ -148,7 +171,7 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
         </div>
       </div>
 
-      {/* Facts — scrollable bottom half */}
+      {/* Facts — scrollable bottom 60% */}
       <div className="flex-1 overflow-y-auto bg-forest-950">
         <div className="px-5 pt-4 pb-6">
 
@@ -165,7 +188,7 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
             <span className="xp-badge mt-1">+200 XP</span>
           </div>
 
-          {/* Facts section */}
+          {/* Facts */}
           {loadingInfo ? (
             <div className="flex items-center gap-3 py-6">
               <motion.div animate={{ rotate: 360 }}
@@ -182,15 +205,12 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
               {speciesInfo.description && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="flex gap-3"
+                  transition={{ delay: 0.1 }} className="flex gap-3"
                 >
                   <BookOpen size={16} className="text-forest-500 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">About</p>
-                    <p className="text-sm font-body text-forest-300 leading-relaxed">
-                      {speciesInfo.description}
-                    </p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">{speciesInfo.description}</p>
                   </div>
                 </motion.div>
               )}
@@ -198,15 +218,12 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
               {speciesInfo.where_found && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="flex gap-3"
+                  transition={{ delay: 0.2 }} className="flex gap-3"
                 >
                   <MapPin size={16} className="text-forest-500 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">Where Found</p>
-                    <p className="text-sm font-body text-forest-300 leading-relaxed">
-                      {speciesInfo.where_found}
-                    </p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">{speciesInfo.where_found}</p>
                   </div>
                 </motion.div>
               )}
@@ -214,15 +231,12 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
               {speciesInfo.diet && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex gap-3"
+                  transition={{ delay: 0.3 }} className="flex gap-3"
                 >
                   <Utensils size={16} className="text-forest-500 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">Diet</p>
-                    <p className="text-sm font-body text-forest-300 leading-relaxed">
-                      {speciesInfo.diet}
-                    </p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">{speciesInfo.diet}</p>
                   </div>
                 </motion.div>
               )}
@@ -230,15 +244,12 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
               {speciesInfo.habitat && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="flex gap-3"
+                  transition={{ delay: 0.4 }} className="flex gap-3"
                 >
                   <span className="text-base flex-shrink-0 mt-0.5">🌿</span>
                   <div>
                     <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">Habitat</p>
-                    <p className="text-sm font-body text-forest-300 leading-relaxed">
-                      {speciesInfo.habitat}
-                    </p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">{speciesInfo.habitat}</p>
                   </div>
                 </motion.div>
               )}
@@ -246,16 +257,13 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
               {speciesInfo.fun_fact && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="flex gap-3"
+                  transition={{ delay: 0.5 }} className="flex gap-3"
                 >
                   <Star size={16} className="flex-shrink-0 mt-0.5"
                     style={{ color: 'var(--accent-amber)' }} />
                   <div>
                     <p className="text-xs font-mono text-forest-500 mb-1 uppercase tracking-wide">Fun Fact</p>
-                    <p className="text-sm font-body text-forest-300 leading-relaxed">
-                      {speciesInfo.fun_fact}
-                    </p>
+                    <p className="text-sm font-body text-forest-300 leading-relaxed">{speciesInfo.fun_fact}</p>
                   </div>
                 </motion.div>
               )}
@@ -265,10 +273,8 @@ function ResultScreen({ preview, result, speciesInfo, loadingInfo, onReset }) {
 
           {/* Action buttons */}
           <div className="flex gap-3 mt-6">
-            <button
-              onClick={onReset}
-              className="btn-ghost flex-1 flex items-center justify-center gap-2"
-            >
+            <button onClick={onReset}
+              className="btn-ghost flex-1 flex items-center justify-center gap-2">
               <RotateCcw size={14} /> Try Again
             </button>
             <button className="btn-primary flex-1">
@@ -298,71 +304,71 @@ export default function Camera() {
     reader.readAsDataURL(file)
   })
 
-  const handleCapture = () => {
-    openCamera(async (file) => {
-      // Show preview immediately
-      const reader  = new FileReader()
-      reader.onload = (e) => setPreview(e.target.result)
-      reader.readAsDataURL(file)
+  const processFile = async (file) => {
+    // Show preview immediately
+    const reader  = new FileReader()
+    reader.onload = (e) => setPreview(e.target.result)
+    reader.readAsDataURL(file)
 
-      setLoading(true)
-      setError(null)
-      setResult(null)
-      setSpeciesInfo(null)
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setSpeciesInfo(null)
 
+    try {
+      const base64 = await fileToBase64(file)
+
+      // ── Step 1: Identify species ────────────────────────────────────────
+      let identified
       try {
-        const base64 = await fileToBase64(file)
-
-        // ── Step 1: Identify species ──────────────────────────────────────
-        let identified
-        try {
-          const res  = await fetch(`${API_BASE}/species/identify`, {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ image: base64 }),
-          })
-          identified = await res.json()
-        } catch (err) {
-          // Backend not ready — use mock
-          await new Promise(r => setTimeout(r, 1500))
-          identified = {
-            common_name:     'Monarch Butterfly',
-            scientific_name: 'Danaus plexippus',
-            confidence:      94,
-            taxon_id:        48662,
-          }
+        const res  = await fetch(`${API_BASE}/species/identify`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ image: base64 }),
+        })
+        identified = await res.json()
+      } catch (err) {
+        // Backend not ready — use mock
+        await new Promise(r => setTimeout(r, 1500))
+        identified = {
+          common_name:     'Monarch Butterfly',
+          scientific_name: 'Danaus plexippus',
+          confidence:      94,
+          taxon_id:        48662,
         }
-
-        setResult(identified)
-        setLoading(false)
-
-        // ── Step 2: Fetch iNaturalist facts ───────────────────────────────
-        if (identified.taxon_id) {
-          setLoadingInfo(true)
-          try {
-            const infoRes = await fetch(`${API_BASE}/species/info?taxon_id=${identified.taxon_id}`)
-            const info    = await infoRes.json()
-            setSpeciesInfo(info)
-          } catch (err) {
-            // Backend not ready — use mock facts
-            setSpeciesInfo({
-              description: 'A large, striking butterfly known for its orange and black wings with white spots along the edges.',
-              habitat:     'Open fields, meadows, roadsides, and gardens with milkweed plants.',
-              diet:        'Adults drink nectar from flowers. Caterpillars eat exclusively milkweed leaves.',
-              where_found: 'North America, migrating annually to central Mexico and coastal California for winter.',
-              fun_fact:    'Monarchs can travel up to 100 miles per day during migration and live up to 8 months.',
-            })
-          } finally {
-            setLoadingInfo(false)
-          }
-        }
-
-      } catch (e) {
-        setError('Identification failed. Try again.')
-        setLoading(false)
       }
-    })
+
+      setResult(identified)
+      setLoading(false)
+
+      // ── Step 2: Fetch iNaturalist facts ─────────────────────────────────
+      if (identified.taxon_id) {
+        setLoadingInfo(true)
+        try {
+          const infoRes = await fetch(`${API_BASE}/species/info?taxon_id=${identified.taxon_id}`)
+          const info    = await infoRes.json()
+          setSpeciesInfo(info)
+        } catch (err) {
+          setSpeciesInfo({
+            description: 'A large, striking butterfly known for its orange and black wings with white spots along the edges.',
+            habitat:     'Open fields, meadows, roadsides, and gardens with milkweed plants.',
+            diet:        'Adults drink nectar from flowers. Caterpillars eat exclusively milkweed leaves.',
+            where_found: 'North America, migrating annually to central Mexico and coastal California for winter.',
+            fun_fact:    'Monarchs can travel up to 100 miles per day during migration and live up to 8 months.',
+          })
+        } finally {
+          setLoadingInfo(false)
+        }
+      }
+
+    } catch (e) {
+      setError('Identification failed. Try again.')
+      setLoading(false)
+    }
   }
+
+  const handleCapture      = () => openCamera(processFile)
+  const handleGlassesPhoto = () => openGlassesPhoto(processFile)
 
   const reset = () => {
     setResult(null)
@@ -374,8 +380,12 @@ export default function Camera() {
   return (
     <div className="relative w-full h-screen">
 
-      {/* Always render camera screen underneath */}
-      <CameraScreen onCapture={handleCapture} loading={loading} />
+      {/* Camera screen always underneath */}
+      <CameraScreen
+        onCapture={handleCapture}
+        onGlassesPhoto={handleGlassesPhoto}
+        loading={loading}
+      />
 
       {/* Error toast */}
       {error && (
