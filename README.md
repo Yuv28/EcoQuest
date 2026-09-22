@@ -15,10 +15,13 @@ Quests can be either solo or in a group. Users can choose to be matched with new
 ### How it Works:
 - After users answer a series of persona-building questions, the information is stored in a DynamoDB table. Lambda triggers send that data to a persona-matching model on Sagemaker which generates similarity scores based on proximity, personality traits, and interests.
 <img width="1361" height="633" alt="Screenshot 2026-09-22 at 5 41 26 PM" src="https://github.com/user-attachments/assets/83f2171b-cc9b-499e-8010-f86fab3dd985" />
+
 - An S3 bucket contains images of animals from iNaturalist data. JupyterNotebooks are used to train models and Pandas is used to create dataframes that are uploaded to DynamoDB with information about the animals. Another Lambda function is triggered which sends data to an image classification model on Sagemaker to identify what the animal is and specific facts about it.
 <img width="1365" height="437" alt="Screenshot 2026-09-22 at 5 41 40 PM" src="https://github.com/user-attachments/assets/d08ac8f1-598a-44ab-af24-74abece5aeba" />
+
 - The application is a progressive web app with direct camera and photos integration for both iOS and Android. Users can either take pictures of animals using EcoQuest's built in camera feature or upload a photo from their personal images and the model will identify what animal it is
 <img width="1355" height="686" alt="Screenshot 2026-09-22 at 5 42 41 PM" src="https://github.com/user-attachments/assets/3ca739fa-9774-4305-8bd0-c2706e27bcdb" />
+
 - After completing a quest, users can level up and earn points
 
 ### Future Work:
